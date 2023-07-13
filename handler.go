@@ -1,7 +1,6 @@
 package urlshort
 
 import (
-	"fmt"
 	"net/http"
 
 	"gopkg.in/yaml.v3"
@@ -52,7 +51,6 @@ func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
 }
 
 func parseYaml(data []byte) ([]pathUrl, error) {
-	fmt.Println("tutaj")
 	var pathUrls []pathUrl
 	err := yaml.Unmarshal(data, &pathUrls)
 	if err != nil {
