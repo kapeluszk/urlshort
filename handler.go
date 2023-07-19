@@ -1,6 +1,7 @@
 package urlshort
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"gopkg.in/yaml.v3"
@@ -46,12 +47,31 @@ func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
 		return nil, err
 	}
 
-	pathsToUrls := buildMap(pathUrls)
+	pathsToUrls := buildMapYaml(pathUrls)
 	return MapHandler(pathsToUrls, fallback), nil
 }
 
-func parseYaml(data []byte) ([]pathUrl, error) {
-	var pathUrls []pathUrl
+func JSONHandler(jsn []byte, fallback http.Handler) (http.HandlerFunc, error) {
+	pathUrls, err := parseJson(jsn)
+	if err != nil {
+		return nil, err
+	}
+
+	pathsToUrls := buildMapJson(pathUrls)
+	return MapHandler(pathsToUrls, fallback), nil
+}
+
+func parseJson(data []byte) ([]pathUrlJson, error) {
+	var pathUrls []pathUrlJson
+	err := json.Unmarshal(data, &pathUrls)
+	if err != nil {
+		return nil, err
+	}
+	return pathUrls, nil
+}
+
+func parseYaml(data []byte) ([]pathUrlYaml, error) {
+	var pathUrls []pathUrlYaml
 	err := yaml.Unmarshal(data, &pathUrls)
 	if err != nil {
 		return nil, err
@@ -59,7 +79,7 @@ func parseYaml(data []byte) ([]pathUrl, error) {
 	return pathUrls, nil
 }
 
-func buildMap(pathUrls []pathUrl) map[string]string {
+func buildMapYaml(pathUrls []pathUrlYaml) map[string]string {
 	pathToUrls := make(map[string]string)
 	for _, pu := range pathUrls {
 		pathToUrls[pu.Path] = pu.Url
@@ -67,7 +87,20 @@ func buildMap(pathUrls []pathUrl) map[string]string {
 	return pathToUrls
 }
 
-type pathUrl struct {
+func buildMapJson(pathUrls []pathUrlJson) map[string]string {
+	pathToUrls := make(map[string]string)
+	for _, pu := range pathUrls {
+		pathToUrls[pu.Path] = pu.Url
+	}
+	return pathToUrls
+}
+
+type pathUrlYaml struct {
 	Path string `yaml:"path"`
 	Url  string `yaml:"url"`
+}
+
+type pathUrlJson struct {
+	Path string `json:"path"`
+	Url  string `json:"url"`
 }
